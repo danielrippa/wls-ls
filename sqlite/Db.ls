@@ -5,8 +5,10 @@
     { trim } = dependency native.String
     { StrList } = dependency primitive.List
     { last, map } = dependency native.Array
-    { select-statement, inner-join-statement } = dependency sqlite.Dql
+    { select-statement, join-statement } = dependency sqlite.Dql
     { output-as-objects } = dependency sqlite.Output
+    { debug } = dependency wsh.IO
+    { remove-statement, insert-statement } = dependency sqlite.Dml
 
     #
 
@@ -27,6 +29,8 @@
 
       statements = (StrList statements) `map` sanitize-statement
 
+      for statement in statements => debug statement
+
       sqlite-exec db-filepath, statements, options
 
     ##
@@ -43,9 +47,17 @@
 
         @query select-statement result-columns, from-clauses, distinct, where-clauses, group-by-clauses, having-clauses
 
-      inner-join: (result-columns, table-clause, inner-join-clauses, distinct, where-clauses, group-by-clauses, having-clauses) ->
+      join: (result-columns, table-clause, join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
 
-        @query inner-join-statement result-columns, table-clause, inner-join-clauses, distinct, where-clauses, group-by-clauses, having-clauses
+        @query join-statement result-columns, table-clause, join-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
+
+      insert: (table-clause, columns-clause) ->
+
+        @query insert-statement table-clause, columns-clause
+
+      remove: (table-clause, where-clauses) ->
+
+        @query remove-statement table-clause, where-clauses
 
     {
       new-database

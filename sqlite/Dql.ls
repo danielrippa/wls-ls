@@ -1,70 +1,47 @@
 
   do ->
 
-    { Bool } = dependency primitive.Type
+    { Str, Bool, MaybeStr } = dependency primitive.Type
     { List, StrList } = dependency primitive.List
     { Tuple } = dependency primitive.Tuple
+    { where-as-string, group-by-as-string, having-as-string, order-by-as-string } = dependency sqlite.Clauses
+
+    select-statement = (result-columns, table-reference-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
+
+      StrList result-columns ; StrList table-reference-clauses ; Bool distinct
+
+      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } #{ table-reference-clauses * ' ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
 
     #
 
-    clauses-as-string = (prefix, clauses) ->
+    join-as-string = (join-clause) ->
 
-      StrList clauses
+      Tuple <[ Str Str Str ]> join-clause
 
-      if clauses.length is 0
-        ''
+      [ join-type, table-alias, join-conditions ] = join-clause
+
+      "#join-type JOIN #table-alias ON #join-conditions"
+
+    #
+
+    from-as-string = (table-clause) ->
+
+      MaybeStr table-clause
+
+      if table-clause isnt void
+        "FROM #table-clause"
       else
-        "#prefix #{ clauses * ', ' }"
+        ''
 
-    where-as-string = (clauses) -> clauses-as-string 'WHERE', clauses
+    join-statement = (result-columns, table-clause, join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
 
-    #
+      List <[ List ]> join-clauses
 
-    group-by-as-string = (clauses) -> clauses-as-string 'GROUP BY', clauses
+      table-reference-clauses = [ from-as-string table-clause ] ++ [ (join-as-string join-clause) for join-clause in join-clauses ]
 
-    #
-
-    having-as-string = (clauses) -> clauses-as-string 'HAVING', clauses
-
-    #
-
-    order-by-as-string = (clauses) -> clauses-as-string 'ORDER BY', clauses
-
-    #
-
-    select-statement = (result-columns, from-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
-
-      Bool distinct ; StrList result-columns ; StrList from-clauses
-
-      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } FROM #{ from-clauses * ' ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
-
-    #
-
-    inner-join-as-string = (clause) ->
-
-      Tuple <[ Str Str Str ]> clause
-
-      [ table-alias, left-hand-field, right-hand-field ] = clause
-
-      "INNER JOIN #table-alias ON #left-hand-field = #right-hand-field"
-
-    #
-
-    from-clauses-from-table-and-inner-join-clauses = (table-clauses, inner-join-clauses) ->
-
-      StrList table-clauses ; List <[ List ]> inner-join-clauses
-
-      table-clauses ++ [ (inner-join-as-string inner-join-clause) for inner-join-clause in inner-join-clauses ]
-
-    #
-
-    inner-join-statement = (result-columns, table-clauses, inner-join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
-
-      from-clauses = from-clauses-from-table-and-inner-join-clauses table-clauses, inner-join-clauses
-
-      select-statement result-columns, from-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
+      select-statement result-columns, table-reference-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
 
     {
       select-statement,
-      inner-join-statement
+      join-statement
     }
