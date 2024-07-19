@@ -4,6 +4,7 @@
     { split-at } = dependency native.Array
     { text-as-lines } = dependency primitive.Text
     { trim } = dependency native.String
+    { MaybeStr } = dependency primitive.Type
 
     #
     string-as-columns = (/ '|')
@@ -18,11 +19,19 @@
 
     output-as-objects = (output) ->
 
+      MaybeStr output
+
+      objects = []
+
+      if output is void
+        return objects
+
+      if (trim output) is ''
+        return objects
+
       [ header, lines ] = output |> text-as-lines |> split-at _ , 1
 
       column-names = header |> string-as-columns
-
-      objects = []
 
       for line in lines
 
