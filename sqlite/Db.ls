@@ -2,10 +2,10 @@
   do ->
 
     { sqlite-exec } = dependency sqlite.Process
-    { trim } = dependency native.String
+    { trim, last-chars } = dependency native.String
     { StrList } = dependency primitive.List
-    { last, map } = dependency native.Array
-    { select-statement, join-statement } = dependency sqlite.Dql
+    { map } = dependency native.Array
+    { select-statement } = dependency sqlite.Dql
     { output-as-objects } = dependency sqlite.Output
     { debug } = dependency wsh.IO
     { remove-statement, insert-statement } = dependency sqlite.Dml
@@ -16,9 +16,9 @@
 
     sanitize-statement = (statement) ->
 
-      chars = (trim statement) / ''
+      statement = trim statement
 
-      if (last chars) isnt semicolon
+      if (last-chars statement) isnt semicolon
         "#statement#semicolon"
       else
         statement
@@ -43,13 +43,9 @@
 
       query: -> @exec [ it ], <[ header ]> |> output-as-objects
 
-      select: (result-columns, from-clauses, distinct, where-clauses, group-by-clauses, having-clauses) ->
+      select: (result-columns, table-clause, join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
 
-        @query select-statement result-columns, from-clauses, distinct, where-clauses, group-by-clauses, having-clauses
-
-      join: (result-columns, table-clause, join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
-
-        @query join-statement result-columns, table-clause, join-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
+        @query select-statement result-columns, table-clause, join-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
 
       insert: (table-clause, columns-clause) ->
 

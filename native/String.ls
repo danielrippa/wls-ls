@@ -130,8 +130,8 @@
 
     #
 
-    first = (string, n = 1) -> string.slice 0, n
-    last = (string, n = 1) -> string.slice -n
+    first-chars = (string, n = 1) -> string.slice 0, n
+    last-chars = (string, n = 1) -> string.slice -n
 
     #
 
@@ -142,6 +142,19 @@
 
     #
 
+    take-chars = (string, n) ->
+
+      if n <= 0
+        string.slice 0, 0
+      else
+        string.slice 0, n
+
+    drop-chars = (string, n) ->
+
+      if n <= 0
+        string
+      else
+        string.slice n
 
     {
       char, trim,
@@ -152,6 +165,7 @@
       affix, prepend, append,
       single-quotes, double-quotes,
       parens, braces, square-brackets, angle-brackets,
-      first, last,
-      padl, padr
+      first-chars, last-chars,
+      padl, padr,
+      take-chars, drop-chars
     }

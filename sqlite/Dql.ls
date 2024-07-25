@@ -6,11 +6,16 @@
     { Tuple } = dependency primitive.Tuple
     { where-as-string, group-by-as-string, having-as-string, order-by-as-string } = dependency sqlite.Clauses
 
-    select-statement = (result-columns, table-reference-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
+    #
 
-      StrList result-columns ; StrList table-reference-clauses ; Bool distinct
+    from-as-string = (table-clause) ->
 
-      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } #{ table-reference-clauses * ' ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
+      MaybeStr table-clause
+
+      if table-clause isnt void
+        "FROM #table-clause"
+      else
+        ''
 
     #
 
@@ -24,24 +29,14 @@
 
     #
 
-    from-as-string = (table-clause) ->
+    select-statement = (result-columns, table-clause, join-clauses = [], where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
 
-      MaybeStr table-clause
-
-      if table-clause isnt void
-        "FROM #table-clause"
-      else
-        ''
-
-    join-statement = (result-columns, table-clause, join-clauses, where-clauses = [], order-by-clauses = [], distinct = no, group-by-clauses = [], having-clauses = []) ->
-
-      List <[ List ]> join-clauses
+      StrList result-columns ; Str table-clause ; List <[ List ]> join-clauses ; Bool distinct
 
       table-reference-clauses = [ from-as-string table-clause ] ++ [ (join-as-string join-clause) for join-clause in join-clauses ]
 
-      select-statement result-columns, table-reference-clauses, where-clauses, order-by-clauses, distinct, group-by-clauses, having-clauses
+      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } #{ table-reference-clauses * ', ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
 
     {
-      select-statement,
-      join-statement
+      select-statement
     }

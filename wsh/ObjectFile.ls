@@ -2,9 +2,7 @@
   do ->
 
     { read-lines } = dependency wsh.TextFile
-    { string-as-words, trim, first, camel-case } = dependency native.String
-    { first, drop } = dependency native.Array
-    { Str } = dependency primitive.Type
+    { string-as-words, trim, first-chars, camel-case, drop-chars } = dependency native.String
 
     read-object = (filepath) ->
 
@@ -14,17 +12,17 @@
 
         line = trim line
 
-        line-chars = line / ''
+        if line.length is 0
+          continue
 
-        continue if (first line-chars) is '#'
+        if (first-chars line) is '#'
+          continue
 
         words = line |> string-as-words
 
         key = words.0
 
-        value-chars = line-chars `drop` key.length
-
-        value = value-chars * ''
+        value = line `drop-chars` key.length
 
         object[ camel-case key ] = trim value
 

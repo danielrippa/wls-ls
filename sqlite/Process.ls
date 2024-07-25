@@ -28,6 +28,8 @@
 
       Str db-filepath ; StrList commands ; StrList options
 
+      debug "sqlite db-filepath: #db-filepath"
+
       { exe-filepath } = get-config!
 
       sqlite-exe = expand-vars exe-filepath
