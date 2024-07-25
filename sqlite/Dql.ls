@@ -33,9 +33,9 @@
 
       StrList result-columns ; Str table-clause ; List <[ List ]> join-clauses ; Bool distinct
 
-      table-reference-clauses = [ from-as-string table-clause ] ++ [ (join-as-string join-clause) for join-clause in join-clauses ]
+      table-reference-clauses = [ (join-as-string join-clause) for join-clause in join-clauses ]
 
-      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } #{ table-reference-clauses * ', ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
+      "SELECT #{ if distinct then 'DISTINCT' else '' } #{ result-columns * ', ' } #{ from-as-string table-clause } #{ table-reference-clauses * ' ' } #{ where-as-string where-clauses } #{ group-by-as-string group-by-clauses } #{ having-as-string having-clauses } #{ order-by-as-string order-by-clauses }"
 
     {
       select-statement

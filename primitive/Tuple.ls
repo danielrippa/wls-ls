@@ -2,7 +2,7 @@
   do ->
 
     { List, MaybeList, type-descriptor-as-string, type-name, isnt-a, is-a, primitive-type: p, type-error } = dependency primitive.Type
-    { last-item, initial } = dependency native.Array
+    { last-item, trunk-and-root } = dependency native.Array
 
     Tuple = (types-descriptor, elements) ->
 
@@ -13,7 +13,7 @@
       types = types-descriptor / ' '
 
       if (last-item types) is '...'
-        types = initial types
+        [ types ] = trunk-and-root types
 
       for type, index in types
 
