@@ -1,48 +1,48 @@
 
   do ->
 
-    { split-at } = dependency native.Array
+    { split-array-at, reject-items, map-items } = dependency native.Array
+    { trimmed-is-empty, entity-encode } = dependency native.String
     { text-as-lines } = dependency primitive.Text
-    { trim } = dependency native.String
     { MaybeStr } = dependency primitive.Type
+    { object-from-arrays } = dependency native.Object
 
-    #
     string-as-columns = (/ '|')
 
+    output-as-header-and-lines = (output) ->
+
+      [ header, lines ] = output |> text-as-lines |> split-array-at _ , 1
+
+      lines = reject-items lines, trimmed-is-empty
+
+      [ header, lines ]
+
+    output-as-obj-list = (output) ->
+
+      if output isnt void
+
+        [ header, lines ] = output |> output-as-header-and-lines
+
+        map-items lines, (line) -> object-from-arrays (header |> string-as-columns), string-as-columns line
+
+      else
+
+        []
+
     #
 
-    columns-as-object = (column-names, column-values) ->
+    output-as-obj = (output) ->
 
-      { [ (column-name), (column-values[index]) ] for column-name, index in column-names }
+      if (MaybeStr output) is void
 
-    #
+        return {}
 
-    output-as-objects = (output) ->
+      else
 
-      MaybeStr output
+        [ header, [ line ] ] = output |> output-as-header-and-lines
 
-      objects = []
-
-      if output is void
-        return objects
-
-      if (trim output) is ''
-        return objects
-
-      [ header, lines ] = output |> text-as-lines |> split-at _ , 1
-
-      column-names = header |> string-as-columns
-
-      for line in lines
-
-        continue if (trim line) is ''
-
-        column-values = line |> string-as-columns
-
-        objects.push columns-as-object column-names, column-values
-
-      objects
+        object-from-arrays (header |> string-as-columns), string-as-columns line
 
     {
-      output-as-objects
+      output-as-obj, output-as-obj-list
     }

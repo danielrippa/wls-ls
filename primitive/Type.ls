@@ -5,7 +5,7 @@
     { array-as-object } = dependency native.Array
     { trim, lower-case } = dependency native.String
 
-    p = primitive-type = array-as-object <[ Str Null Fieldset Num NaN List Bool Fn Void Tuple ]>
+    p = primitive-type = array-as-object <[ Str Null Obj Num NaN List Bool Fn Void Tuple ]>
 
     type-name = (value) ->
 
@@ -17,7 +17,7 @@
           switch value
             | null => p.Null
             | undefined => p.Void
-            else p.Fieldset
+            else p.Obj
 
         | n.Number =>
 
@@ -33,14 +33,16 @@
 
     #
 
+    type-error = (message) -> throw new Error "TypeError: #message"
+
     type-descriptor-as-string = (descriptor) ->
 
       switch type-name descriptor
 
         | p.List => descriptor * ' '
-        else String descriptor
+        | p.Str => descriptor
 
-    type-error = (message) -> throw new Error "TypeError: #message"
+        else type-error "Invalid type descriptor '#descriptor'. It muse be any of Str, List."
 
     fails-to-be = (value, message) !-> type-error "Value [#{ type-name value }] #{ String value } must be #message"
 
@@ -89,7 +91,7 @@
           break
 
       value `fails-to-be` "any of #{ types * ', ' }" \
-        unless actual-type isnt void
+        if actual-type is void
 
       value
 
@@ -102,8 +104,8 @@
     Str = -> Type <[ Str ]> it
     MaybeStr = -> Maybe <[ Str ]> it
 
-    Fieldset = -> Type <[ Fieldset ]> it
-    MaybeFieldset = -> Maybe <[ Fieldset ]> it
+    Obj = -> Type <[ Obj ]> it
+    MaybeObj = -> Maybe <[ Obj ]> it
 
     Num = -> Type <[ Num ]> it
     MaybeNum = -> Maybe <[ Num ]> it
@@ -123,6 +125,6 @@
       type-descriptor-as-string, type-error,
       Type, Either, Maybe,
       Str, MaybeStr, Num, MaybeNum, Bool, MaybeBool, Fn, MaybeFn,
-      Fieldset, MaybeFieldset, List, MaybeList,
+      Obj, MaybeObj, List, MaybeList,
       is-a, isnt-a
     }

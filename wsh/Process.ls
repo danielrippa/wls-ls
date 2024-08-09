@@ -43,11 +43,6 @@
 
         throw new Error message
 
-      if errorlevel isnt 0
-
-        debug "wsh.Process.run with errorlevel #errorlevel"
-        debug "wsh.Process.run #actual-command"
-
       [ output, error ] = [ (file.consume!) for file in files ]
 
       { command, actual-command, working-folder, output, error, errorlevel }

@@ -28,12 +28,9 @@
 
     #
 
-    debug = -> new-shell!Run "%tools-path%\\ods\\ods.exe #{ [ (arg) for arg in arguments ] * ' ' }", 0, no
-
     {
       stdin,
       stdout, stderr,
       lnout, outln,
       lnerr, errln,
-      debug
     }

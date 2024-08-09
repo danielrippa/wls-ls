@@ -1,57 +1,37 @@
 
   do ->
 
+    # Text has a dual nature. It can be either a Str or a StrList.
+    # If can contain various separators, most commonly crlf, lf, etc.
+    # Conceptually text, either as a StrList or as a Str containing separators, represents a List of Str
+    # where each Str represents a line of text.
+
     { Either, type-name, primitive-type: p, Str, List } = dependency primitive.Type
-    { control-chars: { us, cr, lf, ff, vt } } = dependency native.String
+    { control-chars, string-as-records, records-as-array } = dependency native.String
 
-    Text = !-> Either <[ Str List ]> it
-    MaybeText = !-> Either <[ Str List Void ]> it
-
-    #
-
-    crlf = "#cr#lf"
+    Text = -> Either <[ Str List ]> it
+    MaybeText = -> Either <[ Str List Void ]> it
 
     #
 
-    list-as-units = (list) -> List list ; list.join us
-
-    units-as-list = (units) -> Str units ; units.split us
-
-    #
+    { lf } = control-chars
 
     text-as-string = (text, separator = lf) ->
 
-      Text text
+      Text text ; Str separator
 
-      switch type-name text
-
-        | p.List => text.join separator
-        else String text
-
-    #
-
-    text-as-units = (text) ->
-
-      for line-separator in [ crlf, lf, cr, ff, vt ]
-
-        loop
-
-          break if (text.index-of line-separator) is -1
-
-          text = text.replace line-separator, us
-
-      text
-
-    units-as-text = (units, line-separator = crlf) -> units |> units-as-list |> (.join line-separator)
+      if (type-name text) is p.List
+        text.join separator
+      else
+        text
 
     #
 
-    text-as-lines = (text) -> text |> text-as-string |> text-as-units |> units-as-list
+    text-as-lines = (text) -> text |> text-as-string |> string-as-records |> records-as-array
 
-    lines-as-text = (lines, line-separator = crlf) -> (List lines) |> (.join line-separator)
+    lines-as-string = (lines, separator = lf) -> List lines |> array-as-records |> records-as-string _ , separator
 
     {
       Text, MaybeText,
-      text-as-string,
-      text-as-lines, lines-as-text
+      text-as-string, text-as-lines, lines-as-string
     }

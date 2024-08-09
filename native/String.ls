@@ -11,7 +11,11 @@
 
     #
 
-    repeat = (string, count) -> new Array count + 1 .join string
+    repeat-string = (string, count) ->
+
+      result = ''
+      for til count => result += string
+      result
 
     #
 
@@ -103,7 +107,7 @@
 
     control-codes = {} <<< c0-control-codes <<< c1-control-codes
 
-    control-chars = { [ (name), (char code) ] for name, code of control-codes }
+    control-chars = { [ (name), (char char-code) ] for name, char-code of control-codes }
 
     #
 
@@ -130,31 +134,122 @@
 
     #
 
-    first-chars = (string, n = 1) -> string.slice 0, n
-    last-chars = (string, n = 1) -> string.slice -n
-
-    #
-
-    pad = (value, count, padding, fn) -> prefix = repeat padding, count ; prepend value, prefix |> fn
-
-    padl = (value, count, padding = '0') -> pad value, count, padding, -> it `last` count
-    padr = (value, count, padding = ' ') -> pad value, count, padding, -> it `first` count
-
-    #
-
-    take-chars = (string, n) ->
+    take-first-chars = (string, n) ->
 
       if n <= 0
         string.slice 0, 0
       else
         string.slice 0, n
 
-    drop-chars = (string, n) ->
+    drop-first-chars = (string, n) ->
 
       if n <= 0
         string
       else
         string.slice n
+
+    take-last-chars = (string, n) ->
+
+      if n <= 0
+        string
+      else
+        string.slice -n
+
+    drop-last-chars = (string, n) ->
+
+      if n <= 0
+        string
+      else
+        string.slice 0, -n
+
+    #
+
+    pad = (value, count, padding, fn) -> prefix = repeat-string padding, count ; prepend value, prefix |> fn
+
+    padl = (value, count, padding = '0') -> pad value, count, padding, -> it `take-last-chars`  count
+    padr = (value, count, padding = ' ') -> pad value, count, padding, -> it `take-first-chars` count
+
+    padc = (value, count, padding = ' ') ->
+
+      total-padding = count - "#value".length
+
+      prefix = repeat-string padding, Math.floor (total-padding / 2)
+      suffix = repeat-string padding, total-padding - prefix.length
+
+      "#prefix#value#suffix"
+
+    #
+
+    left-align  = (value, n) -> value |> padl _ , n |> left _ , n
+
+    right-align = (value, n) -> value |> padr _ , n |> right _ , n
+
+    center-align = (value, n) -> value |> padc _ , n |> left _ , n
+
+    contains-string = (where, what) -> ((lower-case where).index-of (lower-case what)) isnt -1
+
+    count-chars = (string) -> string.length
+
+    no-chars = (string) -> (count-chars string) is 0
+
+    has-chars = (string) -> (count-chars string) isnt 0
+
+    reverse-string = (string) -> string |> (.split '') |> (.reverse!) |> (.join '')
+
+    { gs, rs, us, cr, lf, ff, vt } = control-chars ; crlf = "#cr#lf"
+
+    string-as-records = (string) ->
+
+      for separator in [ crlf, lf, cr, ff, vt ]
+
+        loop
+
+          break unless string `contains-string` separator
+          string = string.replace separator, rs
+
+      string
+
+    records-as-string = (records, separator = lf) -> records |> (.split rs) |> (.join separator)
+
+    array-as-records = (array) -> array.join rs
+    records-as-array = (records) -> records.split rs
+
+    array-as-units = (array) -> array.join us
+    units-as-array = (units) -> units.split us
+
+    array-as-groups = (array) -> array.join gs
+    groups-as-array = (groups) -> groups.split gs
+
+    #
+
+    trimmed-is-empty = (string) -> (trim string) is ''
+
+    #
+
+    entity-regex = /&#(\d+);/g
+
+      # / ... /g : denote the start and end of the regular expression
+      # &# : matches the literal characters '&#' which is the beginning of a numeric character reference
+
+      # ( : opens a capturing group. It allows to extract the number part of the entity later
+      # \d+ : matches one or more digits
+
+        # \d : is a shorthand character class that matches any digit (0-9)
+        # + : is a quantifier that means "one or more of the preceding element"
+
+      # ) : closes the capturing group
+
+      # ; : matches the literal semicolon character, which ends a character entity
+
+      # /g : a flag that stands for "global", to find all matches not just the first one
+
+    char-as-entity = -> char-code = it.char-code-at 0 ; if (char-code < 32) or (char-code is 127) then "&##{char-code};" else it
+
+    chars-as-entities = (chars) -> [ (char-as-entity character) for character in chars ]
+
+    entity-encode = (string) -> string / '' |> chars-as-entities |> (* '')
+
+    entity-decode = (string) -> string.replace entity-regex, (, number) -> char parse-int number, 10
 
     {
       char, trim,
@@ -165,7 +260,16 @@
       affix, prepend, append,
       single-quotes, double-quotes,
       parens, braces, square-brackets, angle-brackets,
-      first-chars, last-chars,
-      padl, padr,
-      take-chars, drop-chars
+      padl, padr, padc,
+      take-first-chars, drop-first-chars, take-last-chars, drop-last-chars,
+      left-align, right-align, center-align,
+      contains-string,
+      repeat-string,
+      reverse-string,
+      string-as-records, records-as-string,
+      array-as-records, records-as-array,
+      array-as-units, units-as-array,
+      array-as-groups, groups-as-array,
+      trimmed-is-empty,
+      entity-encode, entity-decode
     }

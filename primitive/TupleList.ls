@@ -1,48 +1,44 @@
 
   do ->
 
-    { List } = dependency primitive.List
+    { value-as-string } = dependency native.Value
+    { List, MaybeList, type-error, type-descriptor-as-string, type-name } = dependency primitive.Type
+    { string-as-words } = dependency native.String
+    { each-item } = dependency native.Array
+    { value-as-string } = dependency native.Value
     { Tuple } = dependency primitive.Tuple
-    { type-descriptor-as-string, type-error: MaybeList: PrimitiveMaybeList, is-a, primitive-type: p, type-error } = dependency primitive.Type
-    { control-chars } = dependency native.String
 
-    TupleList = (types-descriptor, value) ->
+    TupleList = (type-descriptor, tuples) ->
 
-      List <[ List ]> value
+      try List tuples
+      catch => type-error "Value [#{ type-name tuples }] #{ value-as-string tuples } must be a TupleList"
 
-      for tuple, index in value
+      type-descriptor = type-descriptor-as-string type-descriptor
 
-        try Tuple types-descriptor, tuple
-        catch => type-error "TupleList item at index #index error: '#{ e.message }'"
+      types = type-descriptor |> string-as-words
+
+      each-item tuples, (tuple, index) ->
+
+        try Tuple type-descriptor, tuple
+        catch => type-error "Value #{ value-as-string tuple } at index #index of TupleList #{ value-as-string tuples } is not a Tuple <[ #type-descriptor ]>, #{ e.message }"
+
+        tuple
+
+      tuples
+
+    #
+
+    MaybeTupleList = (type-descriptor, value) ->
+
+      try MaybeList value
+      catch => type-error "Value #{ value-as-string value } must be either a TupleList or Void"
+
+      TupleList type-descriptor, value \
+        unless value is void
 
       value
-
-    MaybeTupleList = (types-descriptor, value) ->
-
-      PrimitiveMaybeList types-descriptor, value
-
-      if value `is-a` p.List
-
-        TupleList types-descriptor, value
-
-      value
-
-    { rs, us } = control-chars
-
-    tuple-list-as-string = (tuple-list, types-descriptor = '...') ->
-
-      TupleList types-descriptor, tuple-list
-
-      string-list = []
-
-      for tuple in tuple-list
-
-        string-list.push tuple.join us
-
-      string-list.join rs
 
     {
       TupleList,
-      MaybeTupleList,
-      tuple-list-as-string
+      MaybeTupleList
     }

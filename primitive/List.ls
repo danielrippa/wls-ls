@@ -1,30 +1,29 @@
 
   do ->
 
-    { List: PrimitiveList, MaybeList: PrimitiveMaybeList, type-descriptor-as-string, type-error, is-a, isnt-a, primitive-type: p, type-name } = dependency primitive.Type
+    { List: PrimitiveList, type-descriptor-as-string, type-error, isnt-a } = dependency primitive.Type
+    { Text } = dependency primitive.Text
+    { each-item } = dependency native.Array
 
-    List = (item-type-descriptor, list) ->
+    List = (type-descriptor, list) ->
 
-      item-type-name = item-type-descriptor |> type-descriptor-as-string
+      Text type-descriptor ; PrimitiveList list
 
-      PrimitiveList list
+      item-type-name = type-descriptor-as-string type-descriptor
 
-      for item, index in list
+      each-item list, (item, index) ->
 
         type-error "List item #item at index #index is not a #item-type-name" \
           if item `isnt-a` item-type-name
 
-      list
+    MaybeList = (type-descriptor, list) ->
 
-    MaybeList = (item-type-descriptor, list) ->
-
-      PrimitiveMaybeList list
-
-      if list is-a p.List
-
-        List item-type-descriptor, list
+      PrimitiveList type-descriptor, list \
+        unless list is void
 
       list
+
+    #
 
     StrList = -> List <[ Str ]> it
 
@@ -42,14 +41,10 @@
 
     MaybeFnList = -> MaybeList <[ Fn ]> it
 
-    FieldsetList = -> List <[ Fieldset ]> it
-    MaybeFieldsetList = -> MaybeList <[ Fieldset ]> it
-
     {
       List, MaybeList,
       StrList, MaybeStrList,
       NumList, MaybeNumList,
       BoolList, MaybeBoolList,
-      FnList, MaybeFnList,
-      FieldsetList, MaybeFieldsetList
+      FnList, MaybeFnList
     }

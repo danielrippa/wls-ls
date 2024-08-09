@@ -2,12 +2,12 @@
   do ->
 
     { readable, writeable } = dependency wsh.TextStream
-    { text-as-lines, lines-as-text } = dependency primitive.Text
+    { text-as-lines, lines-as-string } = dependency primitive.Text
 
     use-stream = (stream, fn) ->
 
       try result = fn stream
-      catch => debug "wsh.TextFile.use-stream" ; debug e.message
+      catch => throw new Error "wsh.TextFile.use-stream error: #{ e.message }"
 
       stream.Close!
       result
@@ -20,9 +20,9 @@
 
     read-lines = (filepath) -> read filepath |> text-as-lines
 
-    write-lines = (filepath, lines) -> write filepath, (lines |> lines-as-text)
+    write-lines = (filepath, lines) -> write filepath, (lines |> lines-as-string)
 
-    append-lines = (filepath, lines) -> append filepath, (lines |> lines-as-text)
+    append-lines = (filepath, lines) -> append filepath, (lines |> lines-as-string)
 
     {
       read, write, append,
